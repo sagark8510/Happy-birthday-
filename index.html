@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celestial Birthday Surprise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body { background-color: black; color: white; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; margin:0; padding:0; height: 100vh; width: 100vw; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glow-red { box-shadow: 0 0 30px rgba(255, 49, 49, 0.4), 0 0 90px rgba(255, 49, 49, 0.2); }
+        .text-glow { text-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.3); }
+        .text-glow-red { text-shadow: 0 0 20px rgba(255, 49, 49, 0.8); }
+        .cinematic-vignette { fixed: inset-0; pointer-events: none; z-index: 50; box-shadow: inset 0 0 120px rgba(0,0,0,0.9); }
+        
+        .particle { position: absolute; background: rgba(255, 49, 49, 0.15); border-radius: 50%; pointer-events: none; animation: float 20s infinite linear; }
+        @keyframes float {
+            0% { transform: translateY(0) scale(0) translateX(0); opacity: 0; }
+            50% { opacity: 0.6; transform: translateY(-50vh) scale(1.2) translateX(20px); }
+            100% { transform: translateY(-100vh) scale(0) translateX(-20px); opacity: 0; }
+        }
+        .bounce-custom { animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    </style>
+</head>
+<body>
+
+    <div class="cinematic-vignette fixed inset-0"></div>
+    <div id="particle-container" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <div id="scene-countdown" class="relative w-full h-screen flex flex-col items-center justify-center z-10">
+        <div class="text-center px-4">
+            <h2 class="text-xs tracking-[0.8em] uppercase text-red-500/60 mb-3 font-semibold">Celestial Aura</h2>
+            <h1 class="text-5xl sm:text-7xl font-black italic mb-12 tracking-tight">
+                <span class="text-white/90">Something</span><br>
+                <span class="text-red-500 text-glow-red">Special</span>
+            </h1>
+            <div class="grid grid-cols-4 gap-3 sm:gap-6">
+                <div class="flex flex-col items-center"><div class="glass w-20 h-24 rounded-2xl flex items-center justify-center text-4xl font-bold border-white/10" id="days">00</div><span class="text-[10px] mt-2 tracking-widest opacity-40">DAYS</span></div>
+                <div class="flex flex-col items-center"><div class="glass w-20 h-24 rounded-2xl flex items-center justify-center text-4xl font-bold border-white/10" id="hours">00</div><span class="text-[10px] mt-2 tracking-widest opacity-40">HOURS</span></div>
+                <div class="flex flex-col items-center"><div class="glass w-20 h-24 rounded-2xl flex items-center justify-center text-4xl font-bold border-white/10" id="minutes">00</div><span class="text-[10px] mt-2 tracking-widest opacity-40">MIN</span></div>
+                <div class="flex flex-col items-center"><div class="glass w-20 h-24 rounded-2xl flex items-center justify-center text-4xl font-bold border-white/10" id="seconds">00</div><span class="text-[10px] mt-2 tracking-widest opacity-40">SEC</span></div>
+            </div>
+            <p class="mt-20 text-[11px] tracking-[0.8em] font-bold text-white/20 uppercase">10.08.2026</p>
+        </div>
+    </div>
+
+    <div id="scene-landing" class="hidden relative w-full h-screen flex flex-col items-center justify-center text-center px-6 z-10">
+        <h1 class="text-3xl md:text-5xl font-light tracking-widest text-white mb-12 text-glow">
+            Do You Want To Open Your <br />
+            <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400 text-glow-red">Birthday Surprise?</span>
+        </h1>
+        <div class="flex gap-6">
+            <button onclick="changeScene('scene-landing', 'scene-music')" class="px-12 py-4 bg-white text-black font-bold rounded-full shadow-[0_0_20px_rgba(255,255,255,0.4)] active:scale-95 transition-all">Yes</button>
+            <button onclick="changeScene('scene-landing', 'scene-no-choice')" class="px-12 py-4 border border-white/20 text-white rounded-full bg-white/5 backdrop-blur-sm active:scale-95 transition-all">No</button>
+        </div>
+    </div>
+
+    <div id="scene-no-choice" class="hidden relative w-full h-screen flex flex-col items-center justify-center text-center px-6 z-10">
+        <div class="text-8xl mb-6">🤨</div>
+        <h2 class="text-4xl font-bold text-red-500 mb-6 text-glow-red">Wrong Choice!</h2>
+        <p class="text-white/60 mb-8 max-w-sm">Aap 'No' nahi bol sakte! Aapko surprise dekhna hi padega. Chaliye wapas jaiye aur sahi button dabaiye.</p>
+        <button onclick="changeScene('scene-no-choice', 'scene-landing')" class="px-8 py-4 glass rounded-full flex items-center gap-2 border-red-500/30"><i data-lucide="undo-2" size="20"></i> Go Back</button>
+    </div>
+
+    <div id="scene-music" class="hidden relative w-full h-screen flex flex-col items-center justify-center px-8 z-10">
+        <div class="mb-6 text-center">
+            <i data-lucide="music" class="mx-auto mb-4 text-red-500 animate-pulse" size="48"></i>
+            <h2 class="text-2xl font-light tracking-[0.2em] uppercase text-white/70">Pick A Background Track</h2>
+            <p class="text-xs text-white/30 mt-2 tracking-widest">FROM YOUR MOBILE UPLOADS</p>
+        </div>
+        
+        <div class="grid grid-cols-1 gap-2 w-full max-w-sm mb-6 max-h-[50vh] overflow-y-auto pr-1" id="music-list">
+            <button onclick="selectSong('song1.mp3', 0)" id="song-0" class="flex items-center gap-4 p-3 glass rounded-xl text-left w-full hover:bg-white/5 transition-all">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-red-950/30 text-red-500"><i data-lucide="play" size="16"></i></div>
+                <div><h3 class="font-semibold text-sm text-white">Song Option 1</h3><p class="text-[9px] text-white/40 uppercase tracking-wider">File Name: song1.mp3</p></div>
+            </button>
+            <button onclick="selectSong('song2.mp3', 1)" id="song-1" class="flex items-center gap-4 p-3 glass rounded-xl text-left w-full hover:bg-white/5 transition-all">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-red-950/30 text-red-500"><i data-lucide="play" size="16"></i></div>
+                <div><h3 class="font-semibold text-sm text-white">Song Option 2</h3><p class="text-[9px] text-white/40 uppercase tracking-wider">File Name: song2.mp3</p></div>
+            </button>
+            <button onclick="selectSong('song3.mp3', 2)" id="song-2" class="flex items-center gap-4 p-3 glass rounded-xl text-left w-full hover:bg-white/5 transition-all">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-red-950/30 text-red-500"><i data-lucide="play" size="16"></i></div>
+                <div><h3 class="font-semibold text-sm text-white">Song Option 3</h3><p class="text-[9px] text-white/40 uppercase tracking-wider">File Name: song3.mp3</p></div>
+            </button>
+            <button onclick="selectSong('song4.mp3', 3)" id="song-3" class="flex items-center gap-4 p-3 glass rounded-xl text-left w-full hover:bg-white/5 transition-all">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-red-950/30 text-red-500"><i data-lucide="play" size="16"></i></div>
+                <div><h3 class="font-semibold text-sm text-white">Song Option 4</h3><p class="text-[9px] text-white/40 uppercase tracking-wider">File Name: song4.mp3</p></div>
+            </button>
+            <button onclick="selectSong('song5.mp3', 4)" id="song-4" class="flex items-center gap-4 p-3 glass rounded-xl text-left w-full hover:bg-white/5 transition-all">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-red-950/30 text-red-500"><i data-lucide="play" size="16"></i></div>
+                <div><h3 class="font-semibold text-sm text-white">Song Option 5</h3><p class="text-[9px] text-white/40 uppercase tracking-wider">File Name: song5.mp3</p></div>
+            </button>
+        </div>
+        <button id="start-surprise-btn" onclick="startSurpriseExperience()" class="hidden flex items-center gap-3 px-10 py-4 bg-red-600 text-white rounded-full font-bold tracking-widest uppercase shadow-xl glow-red">Start Surprise <i data-lucide="chevron-right" size="20"></i></button>
+    </div>
+
+    <div id="scene-menu" class="hidden relative w-full h-screen flex flex-col items-center justify-center px-8 z-10">
+        <h2 class="text-2xl font-light tracking-[0.2em] uppercase mb-12 text-white/70">Choose Your Gift</h2>
+        <div class="grid grid-cols-1 gap-5 w-full max-w-sm">
+            <button onclick="changeScene('scene-menu', 'scene-memories')" class="flex items-center gap-6 p-5 glass rounded-2xl text-left group w-full relative">
+                <div class="p-4 rounded-xl bg-gradient-to-br from-red-400 to-red-600 shadow-md"><i data-lucide="image" size="28"></i></div>
+                <div><h3 class="text-lg font-bold group-hover:text-red-400 transition-colors">Memories</h3><p class="text-xs text-white/40">Tap to unlock</p></div>
+            </button>
+            <button onclick="changeScene('scene-menu', 'scene-message')" class="flex items-center gap-6 p-5 glass rounded-2xl text-left group w-full relative">
+                <div class="p-4 rounded-xl bg-gradient-to-br from-red-700 to-red-500 shadow-md"><i data-lucide="heart" size="28"></i></div>
+                <div><h3 class="text-lg font-bold group-hover:text-red-400 transition-colors">Special Message</h3><p class="text-xs text-white/40">Tap to unlock</p></div>
+            </button>
+            <button onclick="changeScene('scene-menu', 'scene-surprise')" class="flex items-center gap-6 p-5 glass rounded-2xl text-left group w-full relative">
+                <div class="p-4 rounded-xl bg-gradient-to-br from-red-900 to-red-600 shadow-md"><i data-lucide="star" size="28"></i></div>
+                <div><h3 class="text-lg font-bold group-hover:text-red-400 transition-colors">Final Surprise</h3><p class="text-xs text-white/40">Tap to unlock</p></div>
+            </button>
+        </div>
+    </div>
+
+    <div id="scene-memories" class="hidden relative w-full h-screen flex flex-col items-center justify-center px-6 z-10">
+        <button onclick="changeScene('scene-memories', 'scene-menu')" class="absolute bottom-8 left-8 flex items-center gap-2 px-4 py-2 glass rounded-full text-white/50 text-xs tracking-widest"><i data-lucide="arrow-left" size="14"></i> BACK</button>
+        <div class="glass p-5 rounded-3xl max-w-sm w-full flex flex-col border-white/10">
+            <div class="rounded-2xl overflow-hidden mb-5 h-60 shadow-2xl relative">
+                <img id="memory-img" src="" class="w-full h-full object-cover" alt="Memory">
+            </div>
+            <p id="memory-text" class="text-base font-medium italic text-white/90 mb-3 min-h-[3em]"></p>
+            <div class="h-px w-10 bg-red-500 mb-2"></div>
+            <p id="memory-wish" class="text-xs font-bold uppercase tracking-widest text-red-500"></p>
+        </div>
+        <div class="flex gap-6 mt-6">
+            <button onclick="prevMemory()" class="p-3 glass rounded-full"><i data-lucide="chevron-left" size="20"></i></button>
+            <div class="flex items-center gap-2" id="memory-dots"></div>
+            <button onclick="nextMemory()" class="p-3 glass rounded-full"><i data-lucide="chevron-right" size="20"></i></button>
+        </div>
+    </div>
+
+    <div id="scene-message" class="hidden relative w-full h-screen flex flex-col items-center justify-center px-8 z-10">
+        <button onclick="changeScene('scene-message', 'scene-menu')" class="absolute bottom-8 left-8 flex items-center gap-2 px-4 py-2 glass rounded-full text-white/50 text-xs tracking-widest"><i data-lucide="arrow-left" size="14"></i> BACK</button>
+        <div class="glass p-6 rounded-3xl w-full max-w-md relative border-white/10">
+            <div class="absolute top-4 right-6 text-red-600 opacity-20"><i data-lucide="sparkles" size="36"></i></div>
+            <h3 class="text-xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-300">Dear You,</h3>
+            <p id="typewriter-text" class="text-base leading-relaxed text-white/80 font-light whitespace-pre-wrap min-h-[12em]"></p>
+        </div>
+    </div>
+
+    <div id="scene-surprise" class="hidden relative w-full h-screen flex flex-col items-center justify-center px-6 z-10">
+        <button onclick="changeScene('scene-surprise', 'scene-menu')" class="absolute bottom-8 left-8 flex items-center gap-2 px-4 py-2 glass rounded-full text-white/50 text-xs tracking-widest"><i data-lucide="arrow-left" size="14"></i> BACK</button>
+        
+        <div id="gift-box-container" class="flex flex-col items-center cursor-pointer" onclick="openGiftBox()">
+            <div class="bounce-custom text-red-500 mb-6 drop-shadow-[0_0_35px_rgba(239,68,68,0.6)]">
+                <i data-lucide="gift" size="100"></i>
+            </div>
+            <h3 class="text-lg font-bold uppercase tracking-[0.3em] text-white text-glow">Tap To Open Your Gift</h3>
+        </div>
+
+        <div id="gift-opened-content" class="hidden text-center space-y-6 max-w-sm">
+            <div class="text-red-500 mx-auto w-16 h-16 flex items-center justify-center bg-red-950/20 rounded-full border border-red-500/30 shadow-xl"><i data-lucide="party-popper" size="36"></i></div>
+            <h1 class="text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400 italic">LETS PARTY!</h1>
+            <p class="text-lg text-white/70">Today is all about YOU. Wishing you the happiest and most beautiful year ahead!</p>
+            <div class="flex gap-3 justify-center text-xs">
+                <span class="px-3 py-1.5 glass rounded-full text-red-400 flex items-center gap-1"><i data-lucide="music" size="12"></i> 24:00 VIBES</span>
+                <span class="px-3 py-1.5 glass rounded-full text-red-400 flex items-center gap-1"><i data-lucide="star" size="12"></i> UNLOCKED</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const targetDate = new Date('August 10, 2026 00:00:00').getTime(); 
+        let selectedSongUrl = '';
+        let audioObject = null;
+        let typewriterTimeout = null;
+
+        // PHOTO SECTIONS: In links ko mita kar aap apni pictures daal sakte hain
+        const MEMORIES_DATA = [
+            { image: "https://images.unsplash.com/photo-1513151233558-d860c53bd81d?auto=format&fit=crop&q=80&w=1000", text: "Remember this day? Every second with you is a precious memory I hold dear.", wish: "May your life be as colorful as this day was!" },
+            { image: "https://images.unsplash.com/photo-1530103043960-ef38714abb15?auto=format&fit=crop&q=80&w=1000", text: "To many more adventures, late-night talks, and endless laughter.", wish: "Wishing you a year full of new explorations!" },
+            { image: "https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&q=80&w=1000", text: "You make every moment shine brighter just by being you.", wish: "Keep glowing and growing, birthday star!" }
+        ];
+        let currentMemoryIndex = 0;
+
+        const fullMessageText = "Happy Birthday!\n\nYou are someone who lights up every room you enter. Your kindness, strength, and beautiful soul make the world a better place. On this special day, I want you to know how much you are loved and appreciated. May this year bring you all the magic and success you deserve.\n\nKeep shining bright like the star you are! ✨";
+
+        // Countdown System
+        function updateTimer() {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+            if (diff <= 0) {
+                clearInterval(timerInterval);
+                triggerSparklesBurst();
+                changeScene('scene-countdown', 'scene-landing');
+                return;
+            }
+            document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            document.getElementById('hours').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            document.getElementById('minutes').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            document.getElementById('seconds').innerText = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        }
+        const timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // Confetti Blast
+        function triggerSparklesBurst() {
+            var duration = 4 * 1000; var end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 6, angle: 60, spread: 60, origin: { x: 0 }, colors: ['#ff3131', '#ffffff', '#ff7676'] });
+                confetti({ particleCount: 6, angle: 120, spread: 60, origin: { x: 1 }, colors: ['#ff3131', '#ffffff', '#ff7676'] });
+                if (Date.now() < end) { requestAnimationFrame(frame); }
+            }());
+        }
+
+        // Navigation
+        function changeScene(currentId, nextId) {
+            document.getElementById(currentId).classList.add('hidden');
+            document.getElementById(nextId).classList.remove('hidden');
+            if(nextId === 'scene-memories') { updateMemoryCard(); buildDots(); }
+            if(nextId === 'scene-message') { startTypewriter(); }
+        }
+
+        // Music Selection Logic for Local Storage Files
+        function selectSong(url, id) {
+            selectedSongUrl = url;
+            for(let i=0; i<5; i++) {
+                let btn = document.getElementById('song-'+i);
+                if(btn) btn.classList.remove('ring-2', 'ring-red-500', 'bg-white/10');
+            }
+            document.getElementById('song-' + id).add = document.getElementById('song-' + id).classList.add('ring-2', 'ring-red-500', 'bg-white/10');
+            document.getElementById('start-surprise-btn').classList.remove('hidden');
+        }
+
+        function startSurpriseExperience() {
+            if (audioObject) { audioObject.pause(); audioObject = null; }
+            
+            // Play directly from your uploaded MP3 file location
+            audioObject = new Audio(selectedSongUrl); 
+            audioObject.loop = true;
+            audioObject.play().catch(e => console.log("Audio target dynamic block bypass context active."));
+            
+            changeScene('scene-music', 'scene-menu');
+        }
+
+        // Carousel
+        function updateMemoryCard() {
+            document.getElementById('memory-img').src = MEMORIES_DATA[currentMemoryIndex].image;
+            document.getElementById('memory-text').innerText = `"${MEMORIES_DATA[currentMemoryIndex].text}"`;
+            document.getElementById('memory-wish').innerText = MEMORIES_DATA[currentMemoryIndex].wish;
+            buildDots();
+        }
+        function nextMemory() { currentMemoryIndex = (currentMemoryIndex + 1) % MEMORIES_DATA.length; updateMemoryCard(); }
+        function prevMemory() { currentMemoryIndex = (currentMemoryIndex - 1 + MEMORIES_DATA.length) % MEMORIES_DATA.length; updateMemoryCard(); }
+        function buildDots() {
+            const dotContainer = document.getElementById('memory-dots');
+            dotContainer.innerHTML = "";
+            MEMORIES_DATA.forEach((_, i) => {
+                let dot = document.createElement('div');
+                dot.className = `h-1.5 rounded-full transition-all duration-300 ${i === currentMemoryIndex ? 'w-6 bg-red-500' : 'w-1.5 bg-white/20'}`;
+                dotContainer.appendChild(dot);
+            });
+        }
+
+        // Typewriter
+        function startTypewriter() {
+            if(typewriterTimeout) clearTimeout(typewriterTimeout);
+            let textElement = document.getElementById('typewriter-text');
+            textElement.innerText = ""; let i = 0;
+            function type() {
+                if (i < fullMessageText.length) {
+                    textElement.innerText += fullMessageText.charAt(i); i++;
+                    typewriterTimeout = setTimeout(type, 35);
+                }
+            }
+            type();
+        }
+
+        // Open Gift Box
+        function openGiftBox() {
+            triggerSparklesBurst();
+            document.getElementById('gift-box-container').classList.add('hidden');
+            document.getElementById('gift-opened-content').classList.remove('hidden');
+        }
+
+        lucide.createIcons();
+        const container = document.getElementById('particle-container');
+        for(let i=0; i<25; i++) {
+            let p = document.createElement('div'); p.className = 'particle';
+            p.style.left = Math.random() * 100 + 'vw'; p.style.top = Math.random() * 100 + 'vh';
+            p.style.width = p.style.height = (Math.random() * 5 + 2) + 'px';
+            p.style.animationDelay = (Math.random() * -15) + 's'; container.appendChild(p);
+        }
+    </script>
+</body>
+</html>
